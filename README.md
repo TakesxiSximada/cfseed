@@ -1,0 +1,2 @@
+# cfseed
+CloudFormation Seed
