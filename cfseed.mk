@@ -16,20 +16,32 @@ S3_TEMPLATE_URI ?= $(S3_BUCKET)/$(S3_BUCKET_PATH)/$(TEMPLATES)
 S3_TEMPLATE_URL ?= https://s3.amazonaws.com/$(S3_BUCKET_NAME)/$(S3_BUCKET_PATH)/$(TEMPLATES)
 TEMPLATE_DIR ?= $(CURDIR)/$(TEMPLATES)
 
+
+# Parameter settings
+PARAMETERS_FILE ?= $(environ).json
+S3_PARAMETERS_URI ?= $(S3_BUCKET)/$(S3_BUCKET_PATH)/$(PARAMETERS)
+S3_PARAMETERS_URL ?= https://s3.amazonaws.com/$(S3_BUCKET_NAME)/$(S3_BUCKET_PATH)/$(PARAMETERS)
+PARAMETERS_DIR ?= $(CURDIR)/$(PARAMETERS)
+
+
 ROOT_TEMPLATE_URL ?= $(S3_TEMPLATE_URL)/up.yml
 STOP_TEMPLATE_URL ?= $(S3_TEMPLATE_URL)/down.yml
+ROOT_PARAMETERS_URL ?= $(S3_PARAMETERS_URL)/$(PARAMETERS_FILE)
 CHANGE_SET_NAME ?= commit-`git show --quiet --pretty=format:"%H"`
 CAPABILITIES_OPTION ?= --capabilities CAPABILITY_NAMED_IAM
 
 CLOUDFORMATION ?= aws cloudformation --region $(REGION)
 S3_UPLOAD_TEMPLATES ?= aws s3 sync $(TEMPLATE_DIR)/ $(S3_TEMPLATE_URI) --acl authenticated-read
+S3_UPLOAD_PARAMETERS ?= aws s3 sync $(PARAMETERS_DIR)/ $(S3_PARAMETERS_URI) --acl aws-exec-read
 
 
 .DEFAULT_GOAL := help
 
 
+
 .PHONY: bucket
 bucket:
+	@# Create bucket
 
 	aws s3 mb $(S3_BUCKET) --region $(REGION)
 
@@ -115,8 +127,11 @@ apply:
 up:
 
 	$(S3_UPLOAD_TEMPLATES)
+	$(S3_UPLOAD_PARAMETERS)
 	aws cloudformation --region $(REGION) update-stack --stack-name $(STACK) \
-		--template-url $(ROOT_TEMPLATE_URL)
+	  $(CAPABILITIES_OPTION) \
+		--template-url $(ROOT_TEMPLATE_URL) \
+		--parameters $(ROOT_PARAMETERS_URL)
 
 
 
