@@ -9,9 +9,7 @@ curl -L https://raw.githubusercontent.com/TakesxiSximada/cfseed/master/bootstrap
 Write your Makefile.
 
 ```
-CFSEED := $(CURDIR)/.cfseed
-include environ/$(environ)/config.mk
-include $(CFSEED)/cfseed.mk
+$ cp .cfseed/Makefile.tmpl Makefile
 ```
 
 Display help:

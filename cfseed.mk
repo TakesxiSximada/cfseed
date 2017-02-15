@@ -18,22 +18,21 @@ TEMPLATE_DIR ?= $(CURDIR)/$(TEMPLATES)
 
 
 # Parameter settings
-PARAMETERS_FILE ?= $(environ).json
-S3_PARAMETERS_URI ?= $(S3_BUCKET)/$(S3_BUCKET_PATH)/$(PARAMETERS)
-S3_PARAMETERS_URL ?= https://s3.amazonaws.com/$(S3_BUCKET_NAME)/$(S3_BUCKET_PATH)/$(PARAMETERS)
-PARAMETERS_DIR ?= $(CURDIR)/$(PARAMETERS)
+PARAMETERS_FILE ?= parameters.json
+PARAMETERS_DIR ?= $(CURDIR)/environ/$(environ)
+ROOT_PARAMETERS_PATH ?= $(PARAMETERS_DIR)/$(PARAMETERS_FILE)
 
 
 ROOT_TEMPLATE_URL ?= $(S3_TEMPLATE_URL)/up.yml
 STOP_TEMPLATE_URL ?= $(S3_TEMPLATE_URL)/down.yml
-ROOT_PARAMETERS_URL ?= $(S3_PARAMETERS_URL)/$(PARAMETERS_FILE)
+ROOT_PARAMETERS_URL ?= file://$(CURDIR)/parameters/$(environ)/parameters.json
 CHANGE_SET_NAME ?= commit-`git show --quiet --pretty=format:"%H"`
 CAPABILITIES_OPTION ?= --capabilities CAPABILITY_NAMED_IAM
 
 
 CLOUDFORMATION ?= aws cloudformation --region $(REGION)
 S3_UPLOAD_TEMPLATES ?= aws s3 sync $(TEMPLATE_DIR)/ $(S3_TEMPLATE_URI) --acl authenticated-read
-S3_UPLOAD_PARAMETERS ?= aws s3 sync $(PARAMETERS_DIR)/ $(S3_PARAMETERS_URI) --acl authenticated-read
+# S3_UPLOAD_PARAMETERS ?= aws s3 sync $(PARAMETERS_DIR)/ $(S3_PARAMETERS_URI) --acl authenticated-read
 
 
 .DEFAULT_GOAL := help
@@ -126,11 +125,10 @@ apply:
 up:
 
 	$(S3_UPLOAD_TEMPLATES)
-	$(S3_UPLOAD_PARAMETERS)
 	aws cloudformation --region $(REGION) update-stack --stack-name $(STACK) \
 	  $(CAPABILITIES_OPTION) \
 		--template-url $(ROOT_TEMPLATE_URL) \
-		--parameters $(ROOT_PARAMETERS_URL)
+		--parameters $(ROOT_PARAMETERS_PATH)
 
 
 
