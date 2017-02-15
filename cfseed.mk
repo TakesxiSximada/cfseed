@@ -30,13 +30,13 @@ ROOT_PARAMETERS_URL ?= $(S3_PARAMETERS_URL)/$(PARAMETERS_FILE)
 CHANGE_SET_NAME ?= commit-`git show --quiet --pretty=format:"%H"`
 CAPABILITIES_OPTION ?= --capabilities CAPABILITY_NAMED_IAM
 
+
 CLOUDFORMATION ?= aws cloudformation --region $(REGION)
 S3_UPLOAD_TEMPLATES ?= aws s3 sync $(TEMPLATE_DIR)/ $(S3_TEMPLATE_URI) --acl authenticated-read
-S3_UPLOAD_PARAMETERS ?= aws s3 sync $(PARAMETERS_DIR)/ $(S3_PARAMETERS_URI) --acl aws-exec-read
+S3_UPLOAD_PARAMETERS ?= aws s3 sync $(PARAMETERS_DIR)/ $(S3_PARAMETERS_URI) --acl authenticated-read
 
 
 .DEFAULT_GOAL := help
-
 
 
 .PHONY: bucket
@@ -90,7 +90,6 @@ change-set:
 		--change-set-name $(CHANGE_SET_NAME)
 
 
-
 .PHONY: change-set-list
 change-set-list:
 	@# List change sets
@@ -142,11 +141,12 @@ down:
 	aws cloudformation --region $(REGION) update-stack --stack-name $(STACK) --template-url $(STOP_TEMPLATE_URL)
 
 
+
 .PHONY: balse
 balse:
 	@# Delete stack and configurations
 
-	aws cloudformation delete-stack --stack-name $(STACK)
+	aws cloudformation --region $(REGION) delete-stack --stack-name $(STACK)
 	aws s3 rm $(S3_TEMPLATE_URI) --recursive
 	aws s3 rb $(S3_BUCKET)
 
